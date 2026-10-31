@@ -1,0 +1,92 @@
+[
+  {
+    "file": "firmware.ino",
+    "title": "ESP32-S3 采集固件",
+    "kind": "固件源码",
+    "note": "当前 BLE 固件 v1.0.0；使用前核对引脚与板卡版本。",
+    "source": "8通道BCI/程序/嵌入式程序/ESP32S3_ADS1299_EEG.ino",
+    "bytes": 26554,
+    "sha256": "8085b64c62a2e670167d39abd61a5ed7d267439e8b0b764918e673aa87326f81"
+  },
+  {
+    "file": "eeg_host.py",
+    "title": "Python 桌面上位机",
+    "kind": "软件源码",
+    "note": "8 通道 BLE 接收、波形、数字滤波与 CSV 记录。",
+    "source": "8通道BCI/程序/上位机程序/Python/eeg_host.py",
+    "bytes": 60568,
+    "sha256": "15da51f9424d36710dcdc1a516f3ea99c97f169619c57d2b78f5fdb324e9a1e3"
+  },
+  {
+    "file": "EEG-Mobile-v1.0.0.apk",
+    "title": "Android 安装包",
+    "kind": "安装包",
+    "note": "v1.0.0 · Android 8.0 及以上；来自提供的 release 文件。",
+    "source": "8通道BCI/程序/上位机程序/Android/EEG-Mobile-v1.0.0.apk",
+    "bytes": 716682,
+    "sha256": "4e5dac05702f2568328e37f088006ef966a8d7fbce81c057e15268394e33261a"
+  },
+  {
+    "file": "technical-specification.pdf",
+    "title": "8 通道技术规格说明",
+    "kind": "PDF 文档",
+    "note": "原始技术资料，2026-10-07；部分待确认项已可从当前源码补充。",
+    "source": "8通道BCI/淘宝上架资料_20261007/文档/03_技术规格说明.pdf",
+    "bytes": 421612,
+    "sha256": "00badcc7042e942ce91c54d044b306436e2d0527599060228d03c881ce18a815"
+  },
+  {
+    "file": "development-guide.pdf",
+    "title": "开发接口与使用指南",
+    "kind": "PDF 文档",
+    "note": "原始接口核对、开发流程与使用注意。",
+    "source": "8通道BCI/淘宝上架资料_20261007/文档/04_开发接口与使用指南.pdf",
+    "bytes": 554675,
+    "sha256": "0032935b8d749395366f485dd4403f763bac449702dee67e30fe11b88aaa7106"
+  },
+  {
+    "file": "delivery-checklist.pdf",
+    "title": "定制需求与交付验收",
+    "kind": "PDF 文档",
+    "note": "需求清单与交付验收模板。",
+    "source": "8通道BCI/淘宝上架资料_20261007/文档/05_定制需求与交付验收.pdf",
+    "bytes": 502516,
+    "sha256": "ad2d3c16f8b7b1186c3d1da69605a86be78bb6082ff115cd3c04402d76b93e8d"
+  },
+  {
+    "file": "android-demo.mp4",
+    "title": "Android 操作演示",
+    "kind": "演示视频",
+    "note": "现有视频素材；界面以对应软件版本为准。",
+    "source": "8通道BCI/安卓.mp4",
+    "bytes": 3335358,
+    "sha256": "008511c425dfe4a6ac4c1d6f4c3d65d2385ceca09b3a7e78d307600416700be9"
+  },
+  {
+    "file": "ios-demo.mp4",
+    "title": "iOS 操作演示",
+    "kind": "演示视频",
+    "note": "现有视频素材；不代表源码已完成真机验证或已提供 IPA。",
+    "source": "8通道BCI/IOS.mp4",
+    "bytes": 15468295,
+    "sha256": "2be228f730d5b2f20ad7387ec0ba1d6c8adb0541be2059cd18b741524b0982d4"
+  },
+  {
+    "file": "android-source.zip",
+    "title": "Android 客户端源码",
+    "kind": "软件源码",
+    "note": "精简工程，已移除本地签名凭据、构建缓存和测试数据。构建说明见归档内 README。",
+    "source": "已筛选的移动端工程",
+    "bytes": 93483,
+    "sha256": "34902f7d7678294ec50332ea980aa52e31c74a832ffafabc84f7c975644a447c"
+  },
+  {
+    "file": "ios-source.zip",
+    "title": "iOS 客户端源码",
+    "kind": "软件源码",
+    "note": "React Native / Expo 工程；需要自行配置开发签名，未提供已签名 IPA。",
+    "source": "已筛选的移动端工程",
+    "bytes": 177711,
+    "sha256": "57c4f02642f4e6d9984ee958c9c32892037d3ec6a5bbd4b17f365ed4b384f157"
+  }
+]

@@ -1,0 +1,106 @@
+[
+  {
+    "id": "android",
+    "title": "Android 上位机",
+    "group": "软件与开发",
+    "description": "在 Android 手机上通过 BLE 连接八通道采集板，查看波形、调整参数并导出 CSV。",
+    "sections": [
+      {
+        "id": "overview",
+        "title": "版本与安装",
+        "html": "<p>资料中提供 <strong>脑电采集 v1.0.0</strong>，使用 Kotlin 开发，适用于 Android 8.0 及以上。真实采集需要手机具备 BLE 功能；应用运行不依赖 Python 或电脑。</p><ol><li>在<a href=\"downloads.html\">下载中心</a>取得 Android APK，复制到手机。</li><li>用文件管理器打开 APK，按系统提示允许该文件管理器安装应用，并完成安装。</li><li>打开“脑电采集”。首次使用可以先开启模拟设备，熟悉界面后再连接板卡。</li></ol><p>当前资料包含 APK 与 Android 源码。源代码中的版本号为 <code>1.0.0</code>，<code>minSdk = 26</code>，应用标识为 <code>com.eeg.mobile</code>。</p>"
+      },
+      {
+        "id": "connect",
+        "title": "连接与开始采集",
+        "html": "<ol><li>给采集板上电，断开电脑端或其他手机与该板卡的 BLE 连接。</li><li>进入<strong>设备 → 扫描蓝牙设备</strong>。按系统提示允许“附近设备”；Android 11 及以下还需定位权限并开启系统定位。</li><li>在扫描结果中点击采集板。默认筛选名称包含 EEG 或广播指定服务 UUID 的设备；未找到时可以关闭“只显示 EEG 设备”。</li><li>进入<strong>参数</strong>，先使用 250 SPS、24 倍增益，设置输入模式、SRB1、BIAS 与导联检测，然后应用采集参数。</li><li>进入<strong>波形 → 开始采集</strong>。确认有效数据到达、通道波形更新，再开始记录。</li></ol><p>应用参数会暂停采集并结束当前记录。BLE 连接由前台服务维护；实际后台表现受手机系统限制。当前代码在启动后等待首个有效包的阈值为 5 秒，持续采集中无有效包的阈值为 1.5 秒，超时会暂停并保存记录。</p><p>连接成功、指令写入成功与持续收到有效脑电数据是不同状态，联调时应同时观察样本率、丢样和波形。</p>"
+      },
+      {
+        "id": "parameters",
+        "title": "波形、参数与滤波",
+        "html": "<table><thead><tr><th>功能</th><th>当前客户端行为</th></tr></thead><tbody><tr><td>通道与单位</td><td>8 通道，单位 µV；点击通道编号可显示或隐藏通道</td></tr><tr><td>波形显示</td><td>时间窗、幅度范围、原始 / 滤波切换；导联检测开启时异常通道显示 !</td></tr><tr><td>采样率选项</td><td>250、500、1000、2000、4000、8000、16000 SPS；当前固件命令解析也接受这七档，但不代表 BLE 持续吞吐已验证</td></tr><tr><td>增益</td><td>1、2、4、6、8、12、24 倍</td></tr><tr><td>输入模式</td><td>NORMAL、SHORT、TEST、MVDD、TEMP</td></tr><tr><td>其他硬件配置</td><td>SRB1 公共参考、BIAS、导联脱落检测</td></tr><tr><td>数字处理</td><td>Butterworth 滤波及 50 / 60 Hz 谐波陷波</td></tr><tr><td>状态统计</td><td>丢样、包速率、样本率、吞吐、导联状态与设备状态通知</td></tr></tbody></table><p>建议先在 250 SPS 下验证链路，再按<a href=\"firmware.html\">固件说明</a>逐步提高采样率。修改采集或滤波配置会结束旧记录，避免把不同配置混入同一文件。</p>"
+      },
+      {
+        "id": "recording",
+        "title": "记录与导出 CSV",
+        "html": "<ol><li>开始采集后，进入<strong>记录</strong>。</li><li>选择“原始 + 滤波”“仅原始”或“仅滤波”，点击“开始记录”。</li><li>完成后点击“停止记录并保存”。</li><li>点击已保存文件，通过系统文件选择器导出到“下载”等位置。</li></ol><table><thead><tr><th>字段</th><th>含义</th></tr></thead><tbody><tr><td><code>#</code> 注释</td><td>设备、创建时间、真实 / 模拟标记、采样率、增益、参考与滤波设置</td></tr><tr><td><code>time_s</code></td><td>本次记录的相对秒数，与 Python 上位机的绝对时间列不同</td></tr><tr><td><code>sample_index</code></td><td>设备无符号 32 位样本序号</td></tr><tr><td><code>raw_ch1…raw_ch8</code></td><td>各通道原始值，单位 µV，按记录模式选入</td></tr><tr><td><code>filt_ch1…filt_ch8</code></td><td>各通道滤波值，单位 µV，按记录模式选入</td></tr></tbody></table><p>绘图降采样只影响屏幕显示，CSV 保存收到的全部有效样本。缺样通过序号与时间间隙体现，不插值补造测量值。文件默认保存在应用私有存储中；需要保留的记录应在卸载应用前导出。</p>"
+      },
+      {
+        "id": "demo",
+        "title": "无硬件演示",
+        "html": "<p>在<strong>设备 → 开启模拟设备 → 开始采集</strong>启动演示。界面显示“模拟数据”，生成八通道合成波形，可操作滤波、参数与 CSV 记录。模拟模式不需要蓝牙权限。</p><p>模拟信号用于验证软件操作流程。MVDD / TEMP 模式下的演示仍是合成波形，不代表真实电源电压或温度。离开应用较长时间后，模拟采集会暂停并保存记录。</p>"
+      },
+      {
+        "id": "development",
+        "title": "源码构建与协议",
+        "html": "<p>使用 Android Studio 打开 Android 工程，或在已配置 Android 工具链的终端中运行：</p><pre><code class=\"language-powershell\">.\\gradlew.bat assembleDebug testDebugUnitTest lintDebug</code></pre><p>调试包用于本地开发。生成发行包时需配置自己的发行签名，再执行 <code>assembleRelease</code>；覆盖升级需要保持相同包名与签名并提高 <code>versionCode</code>。公开源码包不应包含开发者签名材料。</p><p>工程配置记录：AGP 9.4.1、Gradle 9.6.0、compile / target SDK 36、min SDK 26；Java 源代码兼容级别为 21。请以随工程提供的 Gradle 配置与包装器为准。</p><p>BLE 服务 UUID 为 <code>6e400001-b5a3-f393-e0a9-e50e24dcca9e</code>，RX / TX / STATUS 分别使用 <code>6e400002</code>、<code>6e400003</code>、<code>6e400004</code> 同后缀。RX 接收带响应写入的换行结尾文本命令，TX 通知二进制数据，STATUS 通知可选 JSON 状态。完整命令和帧结构见<a href=\"protocol.html\">通信协议</a>。</p>"
+      },
+      {
+        "id": "verification",
+        "title": "验证范围",
+        "html": "<p>随附 README 记录了单元测试、Android Lint、签名检查，以及 Android 模拟器安装运行的验证结果。本网站整理过程未重新执行这些应用测试。</p><p>原资料明确说明：未在交付测试环境连接真实 ESP32-S3 + ADS1299 采集板。因此 BLE 真机连接、指令应答、电极信号与持续吞吐仍需结合实际板卡和手机验证。模拟波形或模拟器运行不能替代硬件联调。</p>"
+      }
+    ],
+    "sources": [
+      "8通道BCI/程序/上位机程序/Android/EEGMobile/README.md",
+      "8通道BCI/程序/上位机程序/Android/EEGMobile/app/build.gradle.kts",
+      "8通道BCI/程序/上位机程序/Android/EEGMobile/app/src/main/AndroidManifest.xml",
+      "8通道BCI/程序/上位机程序/Android/EEGMobile/app/src/main/java/com/eeg/mobile/MainActivity.kt",
+      "8通道BCI/程序/上位机程序/Android/EEGMobile/app/src/main/java/com/eeg/mobile/session/EegService.kt",
+      "8通道BCI/程序/上位机程序/Android/EEGMobile/app/src/main/java/com/eeg/mobile/core/EegProtocol.kt"
+    ]
+  },
+  {
+    "id": "ios",
+    "title": "iOS 上位机",
+    "group": "软件与开发",
+    "description": "面向 iPhone 与 iPad 的八通道 BLE 采集客户端源码，包含实时波形、参数控制和 CSV 导出。",
+    "sections": [
+      {
+        "id": "overview",
+        "title": "交付形式与运行环境",
+        "html": "<p>iOS 客户端使用 React Native / Expo，界面为中文，支持 iPhone 与 iPad。资料提供的是<strong>可构建源码</strong>，当前没有可直接安装的已签名 IPA。</p><table><thead><tr><th>运行方式</th><th>用途与能力</th></tr></thead><tbody><tr><td>独立 iOS App</td><td>需要 Mac、Xcode 与签名配置；用于真实 BLE 设备连接、波形及本机 CSV 记录</td></tr><tr><td>浏览器预览</td><td>用于模拟设备与界面体验；不支持真实板卡 BLE 连接</td></tr><tr><td>Expo Go</td><td>不包含本项目所需的原生蓝牙模块，不能替代独立 App 进行真实采集</td></tr></tbody></table><p>项目 <code>package.json</code> 声明版本 1.0.0，使用 Expo <code>~57.0.25</code>、React Native <code>0.86.3</code>，Node.js 引擎要求为 <code>&gt;=22.13.0</code>。这些是当前资料的依赖配置，构建应使用项目锁文件。</p>"
+      },
+      {
+        "id": "build",
+        "title": "在 Mac 上构建并安装",
+        "html": "<ol><li>将 iOS 源码复制到 Mac。不要复制 Windows 下的 <code>node_modules</code>，在 Mac 上重新安装依赖。</li><li>准备 Node.js、Xcode 与 iOS 工具链，首次打开 Xcode 完成组件安装并选择 Command Line Tools。随附脚本提示使用 Node.js 24 LTS、Xcode 26.4 或兼容的更新版本。</li><li>用数据线连接并信任 iPhone，按系统提示启用开发者模式，在 Xcode 中配置自己的 Apple 开发账号。</li><li>在工程目录执行下方脚本，按提示选择设备。</li></ol><pre><code class=\"language-bash\">bash build-ios-on-mac.command</code></pre><p>脚本依次执行 <code>npm ci</code>、类型检查、测试，并运行：</p><pre><code class=\"language-bash\">npx expo run:ios --device --configuration Release</code></pre><p>如遇 Team、签名或 Bundle Identifier 问题，可以先生成原生工程：</p><pre><code class=\"language-bash\">npx expo prebuild --platform ios\nopen ios/*.xcworkspace</code></pre><p>在 Xcode 的 Signing &amp; Capabilities 中选择自己的 Team 与有效签名配置。需要更改应用标识时，先修改 <code>app.json</code> 中的 <code>ios.bundleIdentifier</code>，再重新生成原生工程。Release 构建将 JavaScript 包含在应用中，安装完成后无需 Metro 服务。</p>"
+      },
+      {
+        "id": "connect",
+        "title": "真机连接与采集",
+        "html": "<ol><li>给采集板上电，断开电脑或其他手机与该板卡的连接。</li><li>在<strong>设备 → 扫描蓝牙设备</strong>允许蓝牙访问，选择设备连接。扫描不到时可以关闭“只显示 EEG 设备”。</li><li>先使用默认的 250 SPS、24 倍增益验证链路。连接后，客户端会发送配置；成功写入命令不等于已经收到采样数据。</li><li>进入<strong>波形 → 开始采集</strong>，收到有效数据后才显示正在采集。</li><li>在<strong>参数</strong>页修改设置并应用时，当前采集会暂停并保存记录；完成后需重新开始采集。</li><li>进入<strong>记录</strong>选择记录内容，开始记录，结束后保存并导出 CSV。</li></ol><p>当前实现采用前台采集：进入后台会主动停止采集并结束记录，回到前台后手动启动。首包等待阈值为 5 秒，持续采集中无有效数据阈值为 2 秒。请勿将它视为已经支持锁屏或后台连续采集。</p>"
+      },
+      {
+        "id": "features",
+        "title": "参数与显示功能",
+        "html": "<table><thead><tr><th>项目</th><th>功能</th></tr></thead><tbody><tr><td>波形</td><td>8 通道、µV 单位、通道开关、1–20 秒时间窗、自动或固定幅度</td></tr><tr><td>信号选择</td><td>原始 / 滤波切换</td></tr><tr><td>采样率设置</td><td>250、500、1000、2000、4000 SPS</td></tr><tr><td>增益与模式</td><td>1 / 2 / 4 / 6 / 8 / 12 / 24 倍；NORMAL / SHORT / TEST / MVDD / TEMP</td></tr><tr><td>参考与检测</td><td>SRB1、BIAS、导联脱落检测</td></tr><tr><td>滤波</td><td>Butterworth SOS 流式处理，默认 0.5–45 Hz 带通，50 / 60 Hz 谐波陷波</td></tr><tr><td>数据校验</td><td>CRC8、24 位有符号解码、样本序号回绕、丢样与导联状态</td></tr></tbody></table><p>采样率设置范围与真实持续吞吐不同。iOS 的 MTU 由系统协商；完整八通道单样本数据通知至少为 39 字节，含 ATT 开销至少需要 MTU 42；MTU 23 无法容纳该帧。实际高采样率能力需以板卡、iPhone 和无线环境联调为准。</p>"
+      },
+      {
+        "id": "recording",
+        "title": "文件保存与 CSV 格式",
+        "html": "<p>可记录原始、滤波或两者。独立 App 将文件增量写入 <code>Documents/EEG</code>，可使用系统分享导出，也可在 iPhone“文件 → 我的 iPhone → 脑电采集 → EEG”访问。卸载前请导出需要保留的数据。</p><table><thead><tr><th>字段</th><th>含义</th></tr></thead><tbody><tr><td><code>#</code> 注释</td><td>创建时间、设备、真实 / 模拟标记、实际采样率与增益、滤波及请求的硬件设置</td></tr><tr><td><code>time_s</code></td><td>从首个记录样本起算的相对秒数；不是 Python 版本的 epoch 秒</td></tr><tr><td><code>sample_index</code></td><td>设备无符号 32 位序号，保留自然回绕</td></tr><tr><td><code>raw_ch1…raw_ch8</code></td><td>原始通道值，µV</td></tr><tr><td><code>filt_ch1…filt_ch8</code></td><td>滤波通道值，µV</td></tr></tbody></table><p>CSV 保留收到的有效样本，绘图降采样不减少记录。缺样保留时间间隙，波形断线；重复或乱序包不重复写入。暂停、断开、设备重启、实际采样率 / 增益变化或滤波重设会结束旧文件。</p><p>浏览器预览中的 CSV 暂存在内存，刷新前应导出。浏览器存储行为与 iOS 独立 App 不同。</p>"
+      },
+      {
+        "id": "development",
+        "title": "预览与开发检查",
+        "html": "<p>Windows 上可运行源码中的 <code>01-Preview-Demo.cmd</code> 并进入“体验演示”。模拟信号用来检查界面、滤波与 CSV 流程；MVDD / TEMP 演示仍是合成波形。</p><p>在依赖安装完成后，项目提供以下开发检查命令：</p><pre><code class=\"language-bash\">npm ci\nnpm run typecheck\nnpm run lint\nnpm test\nnpm run doctor\nnpm run export:ios</code></pre><p><code>export:ios</code> 生成 JavaScript / Hermes 与资源，不能生成可安装 IPA，也不能代替 Xcode 编译或硬件测试。BLE UUID 与命令结构见<a href=\"protocol.html\">通信协议</a>。</p>"
+      },
+      {
+        "id": "verification",
+        "title": "验证范围与待联调项目",
+        "html": "<p>随附 README 明确说明：交付环境为 Windows，未运行 Xcode；iPhone 安装包、CoreBluetooth 真机通信及 iOS 文件接口尚未实机验证。网页演示与源码检查说明软件具备相应实现，不能据此承诺 iPhone 真机链路已通过测试。</p><p>联调时先检查 250 SPS 下的连接、指令响应、有效数据与 CSV 导出，再验证目标采样率、长时间稳定性和不同手机型号。客户端负责采集、显示与导出，不提供疾病判断。</p>"
+      }
+    ],
+    "sources": [
+      "8通道BCI/程序/EEGiOS/README.md",
+      "8通道BCI/程序/EEGiOS/package.json",
+      "8通道BCI/程序/EEGiOS/app.json",
+      "8通道BCI/程序/EEGiOS/build-ios-on-mac.command",
+      "8通道BCI/程序/EEGiOS/App.tsx",
+      "8通道BCI/程序/EEGiOS/src/session/controller.ts",
+      "8通道BCI/程序/EEGiOS/src/session/types.ts",
+      "8通道BCI/程序/EEGiOS/src/platform/ble.web.ts"
+    ]
+  }
+]

@@ -1,0 +1,270 @@
+[
+  {
+    "id": "bci8",
+    "title": "8 通道脑电采集板",
+    "group": "产品文档",
+    "description": "ESP32-S3 + ADS1299 采集平台，从硬件结构到 BLE 数据链路。",
+    "sections": [
+      {
+        "id": "overview",
+        "title": "产品概览",
+        "html": "<p>8 通道 BCI 开发板采用 ESP32-S3 主控与 ADS1299 采集前端，面向教学、信号采集系统研发和算法原型验证。资料中包含板卡照片、Arduino 固件、Python 桌面上位机，以及移动端工程。</p><p>本页把产品资料中的已知信息与当前源码的配置分开列出。源码中的功能说明对应本次整理的文件快照，实际使用时应核对板卡和固件版本。</p><div class=\"table-wrap\"><table><thead><tr><th>项目</th><th>资料中的信息</th></tr></thead><tbody><tr><td>采集架构</td><td>ESP32-S3 + ADS1299，8 个采集通道</td></tr><tr><td>供电</td><td>USB / 电池供电；电池规格、极性和充电方式须按实物版本确认</td></tr><tr><td>调试</td><td>USB 调试；当前采集源码使用 BLE 传输</td></tr><tr><td>软件</td><td>Python 桌面上位机、Android 和 iOS 工程资料</td></tr><tr><td>开发方向</td><td>采集显示、记录导出、接口开发、板卡与上位机定制</td></tr></tbody></table></div>"
+      },
+      {
+        "id": "defaults",
+        "title": "当前固件默认配置",
+        "html": "<p>下表来自 <code>ESP32S3_ADS1299_EEG.ino</code> 的常量与初始化代码。</p><div class=\"table-wrap\"><table><thead><tr><th>配置项</th><th>值</th><th>说明</th></tr></thead><tbody><tr><td>固件版本</td><td>1.0.0</td><td>由 FW_VERSION 声明</td></tr><tr><td>广播名称</td><td>ESP32S3-EEG</td><td>在 BLE 扫描中识别</td></tr><tr><td>采样率</td><td>250 SPS / 通道</td><td>上电默认配置</td></tr><tr><td>PGA 增益</td><td>×24</td><td>增益代码 6</td></tr><tr><td>输入模式</td><td>NORMAL</td><td>可切换 SHORT / TEST / MVDD / TEMP</td></tr><tr><td>公共参考</td><td>SRB1 开启</td><td>源码通过 MISC1.SRB1 连接通道负输入</td></tr><tr><td>偏置</td><td>BIAS 开启</td><td>正输入参与偏置反馈配置</td></tr><tr><td>导联脱落检测</td><td>关闭</td><td>可用 LOFF 命令切换</td></tr><tr><td>数据传输</td><td>BLE Notify</td><td>二进制数据 + 独立 JSON 状态</td></tr></tbody></table></div><div class=\"callout\"><p>固件中的采样率表包含 250、500、1000、2000、4000、8000、16000 SPS；Python 界面提供 250–4000 SPS 选项。这是配置范围，不是已实测的 BLE 连续传输上限。</p></div>"
+      },
+      {
+        "id": "architecture",
+        "title": "采集与显示流程",
+        "html": "<p><strong>ADS1299 → SPI / DRDY → ESP32-S3 环形缓冲 → BLE 通知 → 上位机解析 → 显示与 CSV</strong></p><ul><li>ADS1299 每次转换输出 3 字节状态和 8 路 × 3 字节样本，SPI 读取共 27 字节。</li><li>固件以 DRDY 中断触发采集，并使用样本序号记录采集时间轴中的缺口。</li><li>发送任务将连续样本装入 BLE 数据包，每包最多 10 个样本，按协商 MTU 调整。</li><li>Python 上位机校验 CRC、将 24 位原始码换算为 µV，提供数字滤波与 CSV 记录。</li></ul><p>继续阅读 <a href=\"protocol.html\">BLE 通信协议</a> 或从 <a href=\"quickstart.html\">快速开始</a> 完成首次台架调试。</p>"
+      },
+      {
+        "id": "confirmed-boundaries",
+        "title": "选型与版本核对",
+        "html": "<div class=\"table-wrap\"><table><thead><tr><th>需核对的项目</th><th>准备的信息</th></tr></thead><tbody><tr><td>模拟输入</td><td>连接器方向、引脚编号、CH1–CH8 映射、参考与偏置定义</td></tr><tr><td>电源</td><td>USB 输入要求、电池化学体系/电压/极性、保护和充电说明</td></tr><tr><td>外形</td><td>PCB 版本、尺寸、安装孔、连接器与外壳配合</td></tr><tr><td>性能</td><td>采样配置、测试带宽、输入短路噪声、幅值误差、持续运行记录</td></tr><tr><td>交付</td><td>板卡、配件、软件、源码、原理图和 PCB 工程逐项确认</td></tr></tbody></table></div><p>24 位是 ADC 输出位宽，不等于 24 位有效精度。当前资料没有提供完整的整板噪声、精度、续航或人体接口电气安全测试报告；芯片参数和静态截图不能替代这些实测结果。</p>"
+      }
+    ],
+    "sources": [
+      "8通道BCI/淘宝上架资料_20261007/源文件/03_技术规格说明.txt",
+      "8通道BCI/程序/嵌入式程序/ESP32S3_ADS1299_EEG.ino",
+      "8通道BCI/程序/上位机程序/Python/eeg_host.py"
+    ]
+  },
+  {
+    "id": "quickstart",
+    "title": "快速开始",
+    "group": "入门指南",
+    "description": "从资料核对、软件演示到 BLE 台架采集，完成一次可检查的数据记录。",
+    "sections": [
+      {
+        "id": "prepare",
+        "title": "准备板卡与资料",
+        "html": "<ol><li>核对板卡型号、硬件版本、附件和固件版本，准备对应版本的接线图与供电说明。</li><li>准备支持 BLE 的电脑及匹配的上位机；先确认蓝牙适配器和操作系统权限。</li><li>首次在无人体连接的台架环境调试；使用内部 TEST 模式或参数合适的信号源。</li><li>断电检查电源和输入连接，按已确认的 USB 或电池方案供电。</li></ol><div class=\"callout\"><p>该开发板面向教学与研发。现有材料不足以确认人体连接所需的保护与隔离；首次调试不连接人体电极。供电和接线须以实际硬件版本说明为准。</p></div>"
+      },
+      {
+        "id": "demo",
+        "title": "先运行软件演示",
+        "html": "<p>在 Python 环境中安装源码声明的依赖，然后启动模拟模式。演示模式无需板卡，用于熟悉界面和文件操作。</p><pre><code>python -m pip install PyQt6 pyqtgraph numpy scipy bleak\npython eeg_host.py --demo</code></pre><p>模拟数据不来自采集板，不能用于验证硬件精度、通道接线或无线链路。安装依赖的具体版本未在原始 Python 文件中固定，正式交付应记录实际通过验证的环境。</p>"
+      },
+      {
+        "id": "connect",
+        "title": "连接并检查设备状态",
+        "html": "<ol><li>启动真实设备模式：执行 <code>python eeg_host.py</code>。</li><li>扫描并选择广播名为 <code>ESP32S3-EEG</code> 的目标板卡；多台设备时核对设备地址。</li><li>连接后查看固件版本、采样率、增益、模式、MTU 和每包样本数。</li><li>从 250 SPS、×24 开始，以 <code>MODE:TEST</code> 检查采集与传输链路。</li><li>启动采集，观察 CH1–CH8 的数据更新及丢失样本、校验失败统计。</li></ol><p>连接流程与命令格式见 <a href=\"protocol.html\">通信协议</a>；界面和记录说明见 <a href=\"python.html\">Python 上位机</a>。</p>"
+      },
+      {
+        "id": "record",
+        "title": "完成一次短时记录",
+        "html": "<ol><li>选择 CSV 文件路径和保存模式，初次建议保存“原始 + 滤波”。</li><li>记录一段短数据后停止记录，再停止采集。</li><li>用文本编辑器或分析程序检查文件头、<code>time_s</code>、<code>sample_index</code> 和 8 路通道列。</li><li>核对样本序号是否连续、时间间隔是否与采样率相符，并保留当时的增益与滤波参数。</li><li>关闭电源后再修改电源、模拟输入或电极连接。</li></ol><p>内部 TEST 信号可验证部分采集链路，但不能证明电极连接器、输入保护和整个外部模拟通路均已通过测试。完成内部测试后，再按正式接线说明进行外部信号验证。</p>"
+      },
+      {
+        "id": "troubleshooting",
+        "title": "遇到问题时",
+        "html": "<div class=\"table-wrap\"><table><thead><tr><th>现象</th><th>排查方向</th></tr></thead><tbody><tr><td>找不到设备</td><td>板卡上电、广播状态、蓝牙权限；确认未被另一台设备占用</td></tr><tr><td>已连接但无波形</td><td>采集是否启动、通道是否显示、当前输入模式、数据计数是否增长</td></tr><tr><td>校验失败或持续丢样</td><td>协商 MTU、采样率、蓝牙环境、设备距离、主机后台负载</td></tr><tr><td>通道全零或饱和</td><td>输入模式、参考/偏置连接、允许输入范围和 PGA 增益</td></tr><tr><td>CSV 没有写入</td><td>保存路径权限、记录按钮状态、记录线程错误提示</td></tr></tbody></table></div><p>更多排查步骤见 <a href=\"faq.html\">常见问题</a>。</p>"
+      }
+    ],
+    "sources": [
+      "8通道BCI/淘宝上架资料_20261007/源文件/04_开发接口与使用指南.txt",
+      "8通道BCI/程序/嵌入式程序/ESP32S3_ADS1299_EEG.ino",
+      "8通道BCI/程序/上位机程序/Python/eeg_host.py"
+    ]
+  },
+  {
+    "id": "protocol",
+    "title": "BLE 通信协议",
+    "group": "开发参考",
+    "description": "当前 v1.0.0 固件的服务、命令、二进制数据帧与状态 JSON。",
+    "sections": [
+      {
+        "id": "scope",
+        "title": "协议范围与连接流程",
+        "html": "<p>以下协议按当前固件和 Python 解析器整理，适用于本次资料中的 8 通道 BLE 实现。数据包没有独立的协议版本字段；对接前使用状态中的 <code>fw</code> 识别固件，并固定双方的文件版本。</p><ol><li>扫描广播名 <code>ESP32S3-EEG</code> 或下列服务 UUID。</li><li>建立连接，订阅 TX 数据特征与 STAT 状态特征的 Notify。</li><li>写入 <code>INFO</code>，检查固件版本、当前配置及协商 MTU。</li><li>按需要逐条写入配置命令，核对返回状态，再发送 <code>START</code>。</li><li>结束时发送 <code>STOP</code>，停止记录并断开连接。</li></ol>"
+      },
+      {
+        "id": "gatt",
+        "title": "GATT 服务与特征",
+        "html": "<div class=\"table-wrap\"><table><thead><tr><th>用途</th><th>UUID</th><th>属性</th></tr></thead><tbody><tr><td>服务</td><td><code>6e400001-b5a3-f393-e0a9-e50e24dcca9e</code></td><td>Service</td></tr><tr><td>RX 控制命令</td><td><code>6e400002-b5a3-f393-e0a9-e50e24dcca9e</code></td><td>Write / Write without response</td></tr><tr><td>TX 采集数据</td><td><code>6e400003-b5a3-f393-e0a9-e50e24dcca9e</code></td><td>Notify</td></tr><tr><td>STAT 设备状态</td><td><code>6e400004-b5a3-f393-e0a9-e50e24dcca9e</code></td><td>Notify</td></tr></tbody></table></div>"
+      },
+      {
+        "id": "commands",
+        "title": "ASCII 控制命令",
+        "html": "<p>命令区分大小写。每次写入发送一条 ASCII 命令，可带 CR 或 LF；固件遇到首个换行即结束解析，不把一次写入中的多行视为多条命令。</p><div class=\"table-wrap\"><table><thead><tr><th>命令</th><th>作用</th><th>注意</th></tr></thead><tbody><tr><td><code>START</code> / <code>STOP</code></td><td>开始 / 停止采集</td><td>重新开始会重置样本序号和丢样统计</td></tr><tr><td><code>INFO</code> / <code>PING</code></td><td>返回状态 JSON</td><td>可用于配置回读与心跳</td></tr><tr><td><code>SR:250</code></td><td>设置每通道采样率</td><td>代码接受 250/500/1000/2000/4000/8000/16000</td></tr><tr><td><code>GAIN:24</code></td><td>设置 PGA 增益</td><td>接受 1/2/4/6/8/12/24</td></tr><tr><td><code>MODE:TEST</code></td><td>设置输入模式</td><td>NORMAL / SHORT / TEST / MVDD / TEMP</td></tr><tr><td><code>SRB1:0</code> 或 <code>SRB1:1</code></td><td>设置公共参考开关</td><td>影响所有通道</td></tr><tr><td><code>BIAS:0</code> 或 <code>BIAS:1</code></td><td>设置偏置反馈配置</td><td>根据硬件设计使用</td></tr><tr><td><code>LOFF:0</code> 或 <code>LOFF:1</code></td><td>切换导联脱落检测</td><td>状态返回正、负端掩码</td></tr><tr><td><code>REGS</code></td><td>读取 0x00–0x17 寄存器</td><td>返回 t=regs；采集中会停采后重启</td></tr></tbody></table></div><div class=\"callout\"><p>采集中修改采样率、增益或模式等配置会停采、重新配置并重启，样本序号随之归零。建议停止记录后改参数，重新建立一段记录。当前固件没有独立 ACK 编号或结构化错误码，应检查返回状态是否与请求一致。</p></div>"
+      },
+      {
+        "id": "frame",
+        "title": "二进制数据帧",
+        "html": "<p>总长度为 <code>14 + n × 8 × 3 + 1</code> 字节。包头整数为小端；每个通道样本保持 ADS1299 的 <strong>24 位大端有符号补码</strong>。</p><div class=\"table-wrap\"><table><thead><tr><th>字节偏移</th><th>长度</th><th>字段</th><th>说明</th></tr></thead><tbody><tr><td>0–1</td><td>2</td><td>magic</td><td>固定 A5 5A</td></tr><tr><td>2–3</td><td>2</td><td>seq</td><td>uint16，小端包序号，自然回绕</td></tr><tr><td>4</td><td>1</td><td>nch</td><td>通道数，当前为 8</td></tr><tr><td>5</td><td>1</td><td>n</td><td>本包样本数，当前最多 10</td></tr><tr><td>6–9</td><td>4</td><td>sidx</td><td>uint32，小端；首个样本的绝对序号</td></tr><tr><td>10</td><td>1</td><td>loffp</td><td>正端导联脱落状态位图</td></tr><tr><td>11</td><td>1</td><td>loffn</td><td>负端导联脱落状态位图</td></tr><tr><td>12</td><td>1</td><td>flags</td><td>bit0 丢样/溢出，bit1 正在采集，bit2 TEST；bit4–7 为采样率代码</td></tr><tr><td>13</td><td>1</td><td>gainCode</td><td>0–6 对应 ×1/2/4/6/8/12/24</td></tr><tr><td>14 起</td><td>n × 24</td><td>samples</td><td>样本 0 的 CH1…CH8，再样本 1 的 CH1…CH8，以此类推</td></tr><tr><td>最后 1 字节</td><td>1</td><td>CRC8</td><td>覆盖包头和所有样本字节，不含 CRC 字节本身</td></tr></tbody></table></div><p>采样率代码 <code>0/1/2/3/4/5/6</code> 对应 <code>250/500/1000/2000/4000/8000/16000</code> SPS。CRC 多项式 <code>0x07</code>，初值 <code>0x00</code>，逐位左移，不反射，无最终异或。可用 ASCII 字节串 <code>123456789</code> 自检：该实现返回 <code>0xF4</code>。</p>"
+      },
+      {
+        "id": "decode",
+        "title": "样本解析与电压换算",
+        "html": "<pre><code># 三字节 b0, b1, b2 按大端解析\nraw = (b0 &lt;&lt; 16) | (b1 &lt;&lt; 8) | b2\nif raw &amp; 0x800000:\n    raw -= 0x1000000\n\nvolts = raw * 4.5 / (gain * 8388608)\nmicrovolts = volts * 1e6</code></pre><p>4.5 V 是这套源码采用的参考电压。若实际硬件参考源或增益配置发生变化，须同步调整换算；这个公式不包含整板校准误差。Python 的 <code>parse_packet()</code> 返回的 <code>data</code> 已经是 µV 数组，形状为 <code>(样本数, 通道数)</code>。</p>"
+      },
+      {
+        "id": "mtu",
+        "title": "MTU、分包与丢样",
+        "html": "<p>固件请求 MTU 517，但实际值由连接双方协商决定。单个数据包占用 <code>15 + 24n</code> 字节，Notify 的有效载荷通常为 <code>MTU − 3</code>。</p><div class=\"table-wrap\"><table><thead><tr><th>每包样本数</th><th>数据包长度</th><th>需要的最小 ATT MTU</th></tr></thead><tbody><tr><td>1</td><td>39 字节</td><td>42</td></tr><tr><td>6</td><td>159 字节</td><td>162</td></tr><tr><td>10</td><td>255 字节</td><td>258</td></tr></tbody></table></div><p>当前代码把每包样本数至少设为 1，未对 MTU 不足 42 的情况停止发送或自行分片；低 MTU 链路不能据此认为可用。状态 JSON 也以单次 Notify 发送，对接端应检查是否收到完整 JSON。</p><p>判断连续性时，比较本包 <code>sidx</code> 与上包 <code>sidx + n</code>，按 uint32 回绕处理。固件发现 DRDY 漏读或环形缓冲满时会增加样本序号；单包内部只发送连续样本，缺口留在包间。包序号 <code>seq</code> 与样本序号含义不同；当前代码在 START 时重置样本序号，但不会同时清零包序号。</p><p>环形缓冲定义为 600 个槽位，采用空槽区分满/空；不足整包时约等待 30 ms 后发送。上述是代码行为，不构成端到端延迟或无丢包保证。</p>"
+      },
+      {
+        "id": "status",
+        "title": "状态 JSON",
+        "html": "<p>连接期间固件约每秒发送一次状态，已识别的配置与启停命令也会返回状态；<code>REGS</code> 返回独立的寄存器 JSON，未知命令没有结构化错误回复。</p><pre><code>{\n  \"t\": \"status\", \"fw\": \"1.0.0\", \"id\": \"0x3E\",\n  \"stream\": 0, \"sr\": 250, \"gain\": 24, \"mode\": \"NORMAL\",\n  \"srb1\": 1, \"bias\": 1, \"loff\": 0,\n  \"mtu\": 517, \"spp\": 10,\n  \"lost\": 0, \"idx\": 0, \"loffp\": 0, \"loffn\": 0\n}</code></pre><p><code>idx</code> 是固件当前的下一样本序号，<code>loffp/loffn</code> 是最近一次采集更新的导联状态位图。以上仅为字段示例；<code>id</code>、<code>mtu</code>、计数和运行状态必须以设备实际返回值为准。<code>lost</code> 是固件端记录的漏采/溢出样本数；上位机根据样本序号计算的缺口还可能包含链路损失，二者不能简单相加。</p><p><code>REGS</code> 返回 <code>{\"t\":\"regs\",\"v\":[...]}</code>，数组依次对应 0x00–0x17 寄存器。当前配置保存在内存中，源码没有提供用户参数掉电保存功能。</p>"
+      }
+    ],
+    "sources": [
+      "8通道BCI/程序/嵌入式程序/ESP32S3_ADS1299_EEG.ino",
+      "8通道BCI/程序/上位机程序/Python/eeg_host.py"
+    ]
+  },
+  {
+    "id": "firmware",
+    "title": "固件与硬件接口",
+    "group": "开发参考",
+    "description": "Arduino 固件文件、GPIO 映射、任务流程与版本适配要点。",
+    "sections": [
+      {
+        "id": "environment",
+        "title": "源码与开发环境",
+        "html": "<p>主文件为 <code>ESP32S3_ADS1299_EEG.ino</code>，声明的固件版本为 <code>1.0.0</code>。文件头以 Arduino IDE / arduino-cli、Espressif esp32 开发板包 2.0.x 或 3.x、<code>ESP32S3 Dev Module</code> 为开发目标。</p><p>这些是源码声明的环境，原资料未附与本页对应的完整编译矩阵。构建前应固定实际开发板包版本、模组类型、Flash/PSRAM 与 USB 设置，并以目标板编译和台架运行结果确认兼容性。</p><ul><li>核心依赖：Arduino、SPI、BLEDevice、BLEServer、BLEUtils；按头文件是否存在使用 BLE2902。</li><li>串口日志波特率：115200。</li><li>采集 SPI：FSPI，4 MHz，MSB first，SPI_MODE1。</li><li>默认广播名称和版本号可分别通过 BLE_DEVICE_NAME 与 FW_VERSION 修改。</li></ul>"
+      },
+      {
+        "id": "pin-map",
+        "title": "当前源码 GPIO 映射",
+        "html": "<div class=\"table-wrap\"><table><thead><tr><th>ADS1299 信号</th><th>ESP32-S3 配置</th><th>方向 / 作用</th></tr></thead><tbody><tr><td>DIN</td><td>GPIO37</td><td>MOSI，主控输出</td></tr><tr><td>CS</td><td>GPIO36</td><td>低电平片选</td></tr><tr><td>SCLK</td><td>GPIO35</td><td>SPI 时钟</td></tr><tr><td>DOUT</td><td>GPIO34</td><td>MISO，主控输入</td></tr><tr><td>DRDY</td><td>GPIO33</td><td>下降沿中断</td></tr><tr><td>RESET</td><td>PIN_RESET = −1</td><td>源码假设硬件保持高电平，使用 SPI RESET</td></tr><tr><td>PWDN</td><td>PIN_PWDN = −1</td><td>源码假设硬件保持高电平</td></tr><tr><td>START</td><td>PIN_START = −1</td><td>源码假设硬件保持低电平，使用 SPI START/STOP</td></tr></tbody></table></div><div class=\"callout\"><p>这是固件的内部信号映射，不是板边连接器针脚表。不要按照片推断外部连接器顺序；接线时使用对应 PCB 版本的引脚图。源码特别提示 GPIO33–37 可能被八线 PSRAM 模组占用，须核对具体模组或改用空闲 GPIO。</p></div>"
+      },
+      {
+        "id": "reference",
+        "title": "参考与输入模式",
+        "html": "<p>默认配置将 <code>MISC1.SRB1</code> 置位，使用 SRB1 作为通道公共参考，通道 SRB2 关闭。<code>BIAS_SENSP</code> 随偏置开关设为 0xFF 或 0x00；负端不参与该反馈配置。</p><div class=\"table-wrap\"><table><thead><tr><th>模式</th><th>源码对应输入</th><th>适用调试目的</th></tr></thead><tbody><tr><td>NORMAL</td><td>正常输入</td><td>外部已确认的测试信号</td></tr><tr><td>SHORT</td><td>输入短接模式</td><td>观察内部短接条件下的数据</td></tr><tr><td>TEST</td><td>内部测试信号</td><td>检查采集、打包与软件链路</td></tr><tr><td>MVDD</td><td>供电测量输入</td><td>芯片内部调试</td></tr><tr><td>TEMP</td><td>温度传感输入</td><td>芯片内部调试</td></tr></tbody></table></div><p>这些模式使用同一组通道配置，当前命令没有提供逐通道独立增益或独立模式。MVDD 与 TEMP 输出若要解释为电压或温度，还须按芯片对应模式定义换算，不能直接当作脑电幅值。</p>"
+      },
+      {
+        "id": "tasks",
+        "title": "固件工作流程",
+        "html": "<ol><li>初始化 GPIO、SPI 和 ADS1299，读取 ID，写入默认工作寄存器。</li><li>采集任务固定于 core 1，DRDY 中断递增计数并唤醒任务。</li><li>每次读取 27 字节帧，将 8 路原始样本与绝对序号写入环形缓冲。</li><li>BLE 发送任务运行于 core 0，按 MTU 与连续样本数量组织数据包。</li><li>BLE 写入回调只将命令入队；loop() 执行参数修改并定期发送状态。</li></ol><p>断开 BLE 时，固件停止正在进行的采集并重新广播。重新连接后由上位机恢复配置并再次启动采集。</p>"
+      },
+      {
+        "id": "build",
+        "title": "构建与联调检查",
+        "html": "<ol><li>将源码放入与草图同名的 Arduino 文件夹，选择实际 ESP32-S3 目标配置。</li><li>核对 PIN_*、供电电平、主控模组与 ADS1299 硬件连接。</li><li>完成编译与下载后，通过串口查看 ADS1299 ID 和 BLE 广播日志。</li><li>先以 TEST、250 SPS 和 ×24 验证链路，再逐项调整配置。</li><li>记录所用开发板包、编译参数、固件校验值及台架测试结果，与上位机一起归档。</li></ol><p>更改数据帧或命令时，同步更新 <a href=\"protocol.html\">协议说明</a> 和各平台解析器。文件头的旧命令注释仅列到 4000 SPS，但实际处理函数包含 8000 / 16000；对接时以代码和验证结果为准。</p>"
+      }
+    ],
+    "sources": [
+      "8通道BCI/程序/嵌入式程序/ESP32S3_ADS1299_EEG.ino",
+      "8通道BCI/淘宝上架资料_20261007/源文件/04_开发接口与使用指南.txt"
+    ]
+  },
+  {
+    "id": "python",
+    "title": "Python 桌面上位机",
+    "group": "软件使用",
+    "description": "BLE 连接、八通道显示、数字滤波与 CSV 数据记录。",
+    "sections": [
+      {
+        "id": "features",
+        "title": "软件功能",
+        "html": "<p><code>eeg_host.py</code> 使用 PyQt6 与 pyqtgraph 构建桌面界面，使用 bleak 访问 BLE 设备。源码包括真实设备模式和无需硬件的模拟模式。</p><ul><li>设备扫描、连接与断开；读取固件状态。</li><li>8 通道实时曲线、显示开关、时间窗与幅度量程调整。</li><li>采样率、增益、输入模式、SRB1、BIAS 和导联脱落配置。</li><li>高通/低通或带通滤波，50 / 60 Hz 陷波及谐波配置。</li><li>按原始、滤波或两者保存 CSV；显示包速率、样本率、丢失样本和校验失败计数。</li></ul><p>源码说明面向 Windows / macOS / Linux。具体系统、蓝牙适配器和依赖组合仍须按交付环境验证，不能仅凭跨平台框架推断所有设备兼容。</p>"
+      },
+      {
+        "id": "install",
+        "title": "安装与启动",
+        "html": "<pre><code>python -m venv .venv\n\n# Windows PowerShell：直接使用环境内的解释器\n.venv\\Scripts\\python.exe -m pip install PyQt6 pyqtgraph numpy scipy bleak\n.venv\\Scripts\\python.exe eeg_host.py --demo\n\n# 连接真实板卡\n.venv\\Scripts\\python.exe eeg_host.py</code></pre><p>macOS / Linux 使用 <code>.venv/bin/python</code> 执行相同命令。macOS 上需允许运行 Python 的应用访问蓝牙；其设备地址可能显示系统分配的 UUID，而非 MAC 地址。</p><p>原始文件未固定依赖版本。首次完成安装与测试后，建议保存环境版本清单，以便复现。</p>"
+      },
+      {
+        "id": "workflow",
+        "title": "日常使用顺序",
+        "html": "<ol><li>先扫描并连接目标设备，读取状态。</li><li>停止记录时设置采样率、增益和输入模式，确认设备已响应。</li><li>启动采集，按需要调整显示通道、时间窗和幅度。</li><li>检查传输统计，再选择 CSV 路径与保存模式开始记录。</li><li>结束时先停止记录与采集，再断开连接。</li></ol><p>界面采样率下拉框包含 250、500、1000、2000、4000 SPS；协议解析器也认识 8000 和 16000 SPS 编码。高采样率的连续传输能力需在实际链路上验证。</p>"
+      },
+      {
+        "id": "filters",
+        "title": "滤波与原始数据",
+        "html": "<p>滤波在电脑端运行，采用 SciPy 的 Butterworth 二阶节表示及有状态 <code>sosfilt</code> 逐块处理；陷波使用 <code>iirnotch</code>。因此是实时因果滤波，会有相位与起始过渡影响，不等同于离线零相位滤波。</p><ul><li>高通、低通和陷波设置应结合实际采样率，不能把软件滤波带宽写成整板模拟带宽。</li><li>超过奈奎斯特频率约束的陷波谐波不会加入滤波器。</li><li>比较数据时统一采样率、增益、滤波设置和记录时长。</li><li>建议保留原始通道，便于离线重新处理和定位输入干扰。</li></ul>"
+      },
+      {
+        "id": "csv",
+        "title": "CSV 文件格式",
+        "html": "<p>文件以 UTF-8 写入，开头为 <code>#</code> 注释元数据，再写入列名和数据。通道数值单位为 µV。</p><div class=\"table-wrap\"><table><thead><tr><th>列名</th><th>含义</th></tr></thead><tbody><tr><td>time_s</td><td>主机 Unix 时间轴，单位秒；以开始记录时的主机时间加样本序号偏移计算，不是从零开始的相对秒数</td></tr><tr><td>sample_index</td><td>设备样本序号；用于检查缺口和采集重启</td></tr><tr><td>raw_ch1 … raw_ch8</td><td>未经上位机数字滤波、已换算为 µV 的数据</td></tr><tr><td>filt_ch1 … filt_ch8</td><td>经过上位机数字滤波的 µV 数据；按保存模式出现</td></tr></tbody></table></div><div class=\"callout\"><p>CSV 中的 raw 不是 ADS1299 原始整数码，而是已经换算的微伏数值。丢样表现为样本序号或时间缺口，记录器不会自动补出真实缺失样本。</p></div><pre><code># columns_unit: microvolt (uV)\ntime_s,sample_index,raw_ch1,...,raw_ch8,filt_ch1,...,filt_ch8</code></pre><p>读取 CSV 时先跳过 <code>#</code> 注释行。<code>time_s</code> 由主机 <code>time.time()</code> 锚定，再按样本序号推进；它不是设备硬件时间戳，也不表示采样时刻已经与外部时钟同步。采集中重新配置会使设备样本序号重置，因此应结束当前记录并开启新文件，避免把多个采集段误认为连续数据。</p>"
+      },
+      {
+        "id": "structure",
+        "title": "二次开发入口",
+        "html": "<div class=\"table-wrap\"><table><thead><tr><th>代码模块</th><th>职责</th></tr></thead><tbody><tr><td>parse_packet() / crc8()</td><td>帧解析、校验、24 位补码和单位换算</td></tr><tr><td>BleTransport</td><td>bleak 扫描、通知订阅与命令发送</td></tr><tr><td>DemoTransport</td><td>模拟数据与模拟状态</td></tr><tr><td>FilterBank</td><td>滤波配置和逐块状态</td></tr><tr><td>Recorder</td><td>独立线程写入 CSV</td></tr><tr><td>RingBuffer / 主窗口</td><td>滚动显示缓冲与界面交互</td></tr></tbody></table></div>"
+      }
+    ],
+    "sources": [
+      "8通道BCI/程序/上位机程序/Python/eeg_host.py",
+      "8通道BCI/程序/嵌入式程序/ESP32S3_ADS1299_EEG.ino"
+    ]
+  },
+  {
+    "id": "faq",
+    "title": "常见问题与排查",
+    "group": "入门指南",
+    "description": "连接、波形、数据记录和开发交付中常见问题的处理路径。",
+    "sections": [
+      {
+        "id": "connection",
+        "title": "连接类问题",
+        "html": "<details open><summary>设备搜索不到怎么办？</summary><p>检查板卡供电与串口广播日志，确认蓝牙已开启且应用有权限。当前固件广播名为 ESP32S3-EEG；Python 扫描默认筛选名称带 EEG 或包含目标服务 UUID 的设备。确认目标板卡未被其他电脑或手机连接。</p></details><details><summary>USB 已连接，为什么上位机没有数据？</summary><p>当前所整理固件使用 BLE 传输采集数据。USB 在这套源码中用于供电、下载或串口日志，不能把 USB 调试成功等同于 USB 采集链路可用。请按 BLE 流程扫描与连接。</p></details><details><summary>能否同时连接多个上位机？</summary><p>当前代码以一个连接状态和一组发送特征处理采集，没有给出多客户端并发采集的协议和测试记录。使用一个目标上位机进行联调。</p></details>"
+      },
+      {
+        "id": "waveform",
+        "title": "波形与信号问题",
+        "html": "<details open><summary>已连接但没有波形</summary><p>检查 START 是否已发送、状态中 stream 是否为 1、数据计数是否递增，以及通道显示开关。先切换 TEST 模式检查链路；若 TEST 正常而 NORMAL 异常，再按硬件图检查外部输入与参考。</p></details><details><summary>通道全零、饱和或偏置很大</summary><p>核对输入模式、输入范围、增益、公共参考与偏置接法。先断开人体连接，在台架使用已知测试输入，保存未滤波数据定位问题；不要仅用滤波后的曲线判断硬件是否正常。</p></details><details><summary>50 Hz 干扰明显</summary><p>检查供电、输入终端、导联布置、参考连接和周围干扰源。保留关闭滤波的原始数据，再比较开启陷波后的结果；陷波改善显示不等于硬件噪声指标得到验证。</p></details><details><summary>TEST 模式能证明整板性能吗？</summary><p>内部测试信号可检查芯片采集、固件打包和上位机显示等环节，不能单独验证外部电极连接器、保护电路或完整模拟输入通路的噪声与精度。</p></details>"
+      },
+      {
+        "id": "data",
+        "title": "丢样与记录问题",
+        "html": "<details open><summary>如何判断丢样？</summary><p>优先检查相邻数据包的样本序号：下一包 sidx 应等于上一包 sidx + n，并处理 uint32 回绕。固件 lost 计数与上位机缺口统计覆盖范围不同；保留两者作为诊断信息，不直接相加。</p></details><details><summary>低 MTU 或高采样率下不稳定</summary><p>先退回 250 SPS，检查实际 MTU。当前格式一个样本包需要 39 字节通知载荷，对应至少 MTU 42；代码没有为更低 MTU 实现应用层分片。逐级测试更高采样率时记录样本率、缺口与持续时间。</p></details><details><summary>CSV 的 raw_ch 是原始 ADC 码吗？</summary><p>不是。当前 Python 上位机将 ADC 整数码换算为 µV 后再保存，raw_ch 表示未经过上位机数字滤波的数据。需要整数码时，应在解析器中另行保留并明确文件格式。</p></details><details><summary>记录时能修改采样率或增益吗？</summary><p>建议停止记录后再修改。固件重新配置会停采并重新开始，样本序号归零；将不同配置写入同一个连续记录会增加时间轴和单位解释的歧义。</p></details>"
+      },
+      {
+        "id": "scope",
+        "title": "产品与交付问题",
+        "html": "<details open><summary>8 通道意味着只需 8 个电极吗？</summary><p>8 通道描述测量通道数量。当前固件默认公共参考方案还涉及 SRB1 和偏置连接；实际连接器和电极配置必须依照对应硬件版本确认。</p></details><details><summary>有源码就代表开源吗？</summary><p>资料中包含源文件，但原资料没有给出统一的开源授权。使用、修改、商用、再分发以及原理图和 PCB 文件的交付范围，需分别确认。</p></details><details><summary>是否包含全部手机和桌面软件？</summary><p>现有资料包含多个平台的工程与演示内容；标准板卡、软件安装包、定制软件和源码应逐项列入交付清单，不能仅凭目录中有文件判断每个订单的包含范围。</p></details><details><summary>能直接用于诊断、治疗或意念控制吗？</summary><p>产品资料定位为教学与研发采集平台。诊断和治疗不属于本文档功能；专注度评分、意念控制等属于需要另行定义与验证的算法应用，不能由采集板本身推定实现。</p></details>"
+      },
+      {
+        "id": "support",
+        "title": "提交问题时附带的信息",
+        "html": "<ul><li>板卡型号、硬件版本、固件版本、上位机版本。</li><li>操作系统、设备型号、蓝牙适配器与连接方式。</li><li>供电方式和完整接线示意图。</li><li>采样率、增益、模式、MTU、每包样本数及丢样统计。</li><li>可复现的步骤、发生频率、短时原始数据和相关日志。</li></ul><p>分享记录前移除姓名、账号和本机个人路径等识别信息，并确认有权提供相关数据。</p>"
+      }
+    ],
+    "sources": [
+      "8通道BCI/淘宝上架资料_20261007/源文件/04_开发接口与使用指南.txt",
+      "8通道BCI/淘宝上架资料_20261007/源文件/03_技术规格说明.txt",
+      "8通道BCI/程序/上位机程序/Python/eeg_host.py",
+      "8通道BCI/程序/嵌入式程序/ESP32S3_ADS1299_EEG.ino"
+    ]
+  },
+  {
+    "id": "customization",
+    "title": "定制与交付验收",
+    "group": "技术支持",
+    "description": "明确板卡、软件与资料范围，以可复现的测试完成项目交付。",
+    "sections": [
+      {
+        "id": "requirements",
+        "title": "先描述需要实现的结果",
+        "html": "<p>板卡与 Android、iOS、Windows 上位机可按项目需求评估。先提交应用场景、目标平台、数量、核心功能和期望交付物，再确定接口和验收方式。</p><div class=\"table-wrap\"><table><thead><tr><th>需求方向</th><th>需要说明的内容</th></tr></thead><tbody><tr><td>采集与数据</td><td>通道与输入、采样配置、记录时长、数据格式、时间戳与同步</td></tr><tr><td>硬件与结构</td><td>尺寸、安装孔、连接器、电源、电池、配件和外壳</td></tr><tr><td>上位机</td><td>目标系统与设备、连接方式、曲线、滤波、保存、回放与导出</td></tr><tr><td>资料与授权</td><td>固件、上位机源码、原理图、PCB、BOM、SDK；分别确认使用权限</td></tr><tr><td>测试与支持</td><td>验收环境、阈值、交付日期、问题反馈和支持范围</td></tr></tbody></table></div>"
+      },
+      {
+        "id": "deliverables",
+        "title": "交付清单建议",
+        "html": "<div class=\"table-wrap\"><table><thead><tr><th>编号</th><th>交付项</th><th>应记录的信息</th></tr></thead><tbody><tr><td>H01</td><td>板卡与配件</td><td>硬件版本、数量、附件型号、外观与电气检查项目</td></tr><tr><td>F01</td><td>固件</td><td>文件格式、版本、硬件兼容范围、烧录与恢复步骤</td></tr><tr><td>S01</td><td>上位机</td><td>平台、系统版本、功能、安装包与源码范围</td></tr><tr><td>D01</td><td>文档与样例</td><td>接线、协议、文件格式、示例输入输出和环境版本</td></tr><tr><td>A01</td><td>开发支持</td><td>渠道、期限、次数或工时、问题反馈方式</td></tr></tbody></table></div><p>每项写明数量、文件格式和可验收行为。源码交付不自动包含商用、再分发或生产授权；第三方组件的许可也应一并记录。</p>"
+      },
+      {
+        "id": "milestones",
+        "title": "建议里程碑",
+        "html": "<ol><li>需求确认：冻结目标硬件、平台、功能、资料与授权范围。</li><li>样机联调：使用模拟信号验证接口、数据帧和连接流程。</li><li>功能验收：按约定环境与阈值测试，并保存原始数据和缺陷记录。</li><li>正式交付：板卡、固件、上位机、文档版本相互匹配。</li><li>后续变更：记录变化、受影响模块、进度和新的验收条件。</li></ol>"
+      },
+      {
+        "id": "acceptance",
+        "title": "可复现的验收项目",
+        "html": "<div class=\"table-wrap\"><table><thead><tr><th>测试项目</th><th>方法与记录</th></tr></thead><tbody><tr><td>8 通道映射</td><td>逐通道注入已知测试信号，核对端口、编号和极性</td></tr><tr><td>配置一致性</td><td>设置采样率、增益和模式，检查回读与数据输出</td></tr><tr><td>数据率与连续性</td><td>使用独立计时基准，统计应收/实收样本、序号缺口和校验失败</td></tr><tr><td>记录与导出</td><td>核对列名、单位、时间、样本数及文件重新读取</td></tr><tr><td>平台兼容</td><td>在约定设备和系统上测试安装、连接、采集、保存和恢复</td></tr><tr><td>整板性能</td><td>按约定输入、带宽、增益和时长记录噪声、幅值误差等指标</td></tr></tbody></table></div><p>每项结论使用“通过 / 附条件通过 / 未通过 / 未测试”，并记录硬件、固件、软件、输入、供电和测试设备。空白模板不代表已经通过测试，静态截图也不能替代连续采集记录。</p>"
+      }
+    ],
+    "sources": [
+      "8通道BCI/淘宝上架资料_20261007/源文件/05_定制需求与交付验收.txt",
+      "8通道BCI/淘宝上架资料_20261007/源文件/04_开发接口与使用指南.txt"
+    ]
+  }
+]

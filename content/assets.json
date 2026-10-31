@@ -1,0 +1,58 @@
+[
+  {
+    "file": "firmware.ino",
+    "title": "ESP32-S3 采集固件",
+    "kind": "固件源码",
+    "note": "当前 BLE 固件 v1.0.0；使用前核对引脚与板卡版本。",
+    "source": "8通道BCI/程序/嵌入式程序/ESP32S3_ADS1299_EEG.ino"
+  },
+  {
+    "file": "eeg_host.py",
+    "title": "Python 桌面上位机",
+    "kind": "软件源码",
+    "note": "8 通道 BLE 接收、波形、数字滤波与 CSV 记录。",
+    "source": "8通道BCI/程序/上位机程序/Python/eeg_host.py"
+  },
+  {
+    "file": "EEG-Mobile-v1.0.0.apk",
+    "title": "Android 安装包",
+    "kind": "安装包",
+    "note": "v1.0.0 · Android 8.0 及以上；来自提供的 release 文件。",
+    "source": "8通道BCI/程序/上位机程序/Android/EEG-Mobile-v1.0.0.apk"
+  },
+  {
+    "file": "technical-specification.pdf",
+    "title": "8 通道技术规格说明",
+    "kind": "PDF 文档",
+    "note": "原始技术资料，2026-10-07；部分待确认项已可从当前源码补充。",
+    "source": "8通道BCI/淘宝上架资料_20261007/文档/03_技术规格说明.pdf"
+  },
+  {
+    "file": "development-guide.pdf",
+    "title": "开发接口与使用指南",
+    "kind": "PDF 文档",
+    "note": "原始接口核对、开发流程与使用注意。",
+    "source": "8通道BCI/淘宝上架资料_20261007/文档/04_开发接口与使用指南.pdf"
+  },
+  {
+    "file": "delivery-checklist.pdf",
+    "title": "定制需求与交付验收",
+    "kind": "PDF 文档",
+    "note": "需求清单与交付验收模板。",
+    "source": "8通道BCI/淘宝上架资料_20261007/文档/05_定制需求与交付验收.pdf"
+  },
+  {
+    "file": "android-demo.mp4",
+    "title": "Android 操作演示",
+    "kind": "演示视频",
+    "note": "现有视频素材；界面以对应软件版本为准。",
+    "source": "8通道BCI/安卓.mp4"
+  },
+  {
+    "file": "ios-demo.mp4",
+    "title": "iOS 操作演示",
+    "kind": "演示视频",
+    "note": "现有视频素材；不代表源码已完成真机验证或已提供 IPA。",
+    "source": "8通道BCI/IOS.mp4"
+  }
+]

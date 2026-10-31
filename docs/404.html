@@ -1,0 +1,18 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>页面未找到 · 智链脑机工坊</title><body style="font-family:system-ui;margin:12vh auto;max-width:600px;padding:24px;color:#234"><h1>页面未找到</h1><p>地址可能已经变更。请返回文档首页，或使用站内搜索查找。</p><p><a href="index.html" id="back">返回首页 →</a></p><script>
+(async () => {
+  const parts = location.pathname.split('/').filter(Boolean);
+  if (!location.pathname.endsWith('/')) parts.pop();
+  while (true) {
+    const candidate = '/' + (parts.length ? parts.join('/') + '/' : '') + 'index.html';
+    try {
+      const response = await fetch(candidate);
+      if (response.ok && (await response.text()).includes('BCI DEVELOPMENT DOCS')) {
+        document.getElementById('back').href = candidate;
+        break;
+      }
+    } catch {}
+    if (!parts.length) break;
+    parts.pop();
+  }
+})();
+</script></body></html>
